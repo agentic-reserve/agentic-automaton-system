@@ -203,13 +203,27 @@ async function run(): Promise<void> {
     sandboxId: config.sandboxId,
   });
 
-  // Create inference client
-  const inference = createInferenceClient({
-    apiUrl: config.conwayApiUrl,
-    apiKey,
-    defaultModel: config.inferenceModel,
-    maxTokens: config.maxTokensPerTurn,
-  });
+  // Create inference client (Conway or OpenRouter)
+  const inference = config.inferenceProvider === "openrouter" && config.openrouterApiKey
+    ? await (async () => {
+        const { createOpenRouterClient } = await import("./conway/openrouter-inference.js");
+        return createOpenRouterClient({
+          apiKey: config.openrouterApiKey!,
+          defaultModel: config.openrouterModel || "openai/gpt-4o",
+          maxTokens: config.maxTokensPerTurn,
+          lowComputeModel: "openai/gpt-4o-mini",
+          siteUrl: config.openrouterSiteUrl,
+          siteName: config.openrouterSiteName || config.name,
+        });
+      })()
+    : createInferenceClient({
+        apiUrl: config.conwayApiUrl,
+        apiKey,
+        defaultModel: config.inferenceModel,
+        maxTokens: config.maxTokensPerTurn,
+      });
+
+  console.log(`[${new Date().toISOString()}] Inference provider: ${config.inferenceProvider || "conway"} (${inference.getDefaultModel()})`);
 
   // Create social client
   let social: SocialClientInterface | undefined;

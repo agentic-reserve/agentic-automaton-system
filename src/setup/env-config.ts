@@ -118,6 +118,13 @@ export function loadConfigFromEnv(): AutomatonConfig | null {
     solanaNetwork: (process.env.SOLANA_NETWORK as "mainnet" | "devnet") ||
       "devnet",
     solanaWalletAddress: process.env.SOLANA_WALLET_ADDRESS,
+    creatorSolanaAddress: process.env.CREATOR_SOLANA_ADDRESS,
+    // OpenRouter support
+    inferenceProvider: (process.env.INFERENCE_PROVIDER as "conway" | "openrouter") || "conway",
+    openrouterApiKey: process.env.OPENROUTER_API_KEY,
+    openrouterModel: process.env.OPENROUTER_MODEL || "openai/gpt-4o",
+    openrouterSiteUrl: process.env.OPENROUTER_SITE_URL,
+    openrouterSiteName: process.env.OPENROUTER_SITE_NAME,
   };
 
   return config;

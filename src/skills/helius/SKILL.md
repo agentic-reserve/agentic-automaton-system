@@ -1,680 +1,710 @@
 ---
 name: helius
-description: Comprehensive guide for Helius - Solana's leading RPC and API infrastructure provider. Covers RPC nodes, DAS (Digital Asset Standard) API, Enhanced Transactions, Priority Fees, Webhooks, ZK Compression, LaserStream gRPC, and the Helius SDK for building high-performance Solana applications
+description: Complete Helius platform documentation for Solana development - RPC nodes, DAS API, Enhanced Transactions, WebSockets, LaserStream gRPC, Priority Fees, Webhooks, and more
+auto-activate: false
+requires:
+  bins: []
+  env:
+    - HELIUS_API_KEY
 ---
 
-# Helius Development Guide
+# Helius - Solana Developer Platform
 
-Build high-performance Solana applications with Helius - the leading RPC and API infrastructure provider with 99.99% uptime, global edge nodes, and developer-first APIs.
-
-## Overview
-
-Helius provides:
-- **RPC Infrastructure**: Globally distributed nodes with ultra-low latency
-- **DAS API**: Unified NFT and token data (compressed & standard)
-- **Enhanced Transactions**: Parsed, human-readable transaction data
-- **Priority Fee API**: Real-time fee recommendations
-- **Webhooks**: Event-driven blockchain monitoring
-- **ZK Compression**: Compressed account and token APIs
-- **LaserStream**: gRPC-based real-time data streaming
-- **Sender API**: Optimized transaction landing
+Helius is the leading Solana RPC and infrastructure platform providing fast, reliable APIs for building on Solana.
 
 ## Quick Start
 
-### Installation
+### Get API Key (Agents)
+
+Agents can programmatically create accounts and get API keys:
 
 ```bash
-# Install Helius SDK
-npm install helius-sdk
+# Install CLI
+npm install -g helius-cli
 
-# Or with pnpm (recommended)
-pnpm add helius-sdk
+# Generate keypair
+helius keygen
+# Returns wallet address to fund
+
+# Fund wallet with:
+# - 1 USDC (EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)
+# - ~0.001 SOL
+
+# Signup and get API key
+helius signup --json
 ```
 
-### Get Your API Key
-
-1. Visit [dashboard.helius.dev](https://dashboard.helius.dev)
-2. Create an account or sign in
-3. Generate an API key
-4. Store it securely (never commit to git)
-
-### Environment Setup
-
-```bash
-# .env file
-HELIUS_API_KEY=your_api_key_here
-```
-
-### Basic Setup
-
-```typescript
-import { createHelius } from "helius-sdk";
-
-const helius = createHelius({
-  apiKey: process.env.HELIUS_API_KEY!,
-});
-
-// RPC endpoint URLs
-const MAINNET_RPC = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
-const DEVNET_RPC = `https://devnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
-```
-
-## RPC Infrastructure
-
-### Endpoints
-
-| Network | HTTP Endpoint | WebSocket Endpoint |
-|---------|--------------|-------------------|
-| Mainnet | `https://mainnet.helius-rpc.com/?api-key=<KEY>` | `wss://mainnet.helius-rpc.com/?api-key=<KEY>` |
-| Devnet | `https://devnet.helius-rpc.com/?api-key=<KEY>` | `wss://devnet.helius-rpc.com/?api-key=<KEY>` |
-
-### Using with @solana/kit
-
-```typescript
-import { createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
-
-const rpc = createSolanaRpc(
-  `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
-);
-
-const rpcSubscriptions = createSolanaRpcSubscriptions(
-  `wss://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
-);
-
-// Make RPC calls
-const slot = await rpc.getSlot().send();
-const balance = await rpc.getBalance(address).send();
-```
-
-### Helius-Exclusive RPC Methods
-
-| Method | Description |
-|--------|-------------|
-| `getProgramAccountsV2` | Cursor-based pagination for program accounts |
-| `getTokenAccountsByOwnerV2` | Efficient token account retrieval |
-| `getTransactionsForAddress` | Advanced transaction history with filtering |
-
-```typescript
-// getProgramAccountsV2 - handles large datasets efficiently
-const accounts = await helius.rpc.getProgramAccountsV2({
-  programAddress: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  cursor: null, // Start from beginning
-  limit: 100,
-});
-
-// getTransactionsForAddress - advanced filtering
-const transactions = await helius.rpc.getTransactionsForAddress({
-  address: "wallet_address",
-  before: null,
-  until: null,
-  limit: 100,
-  source: "JUPITER", // Filter by source
-  type: "SWAP", // Filter by type
-});
-```
-
-## DAS API (Digital Asset Standard)
-
-Unified access to NFTs, tokens, and compressed assets.
-
-### Core Methods
-
-```typescript
-// Get single asset
-const asset = await helius.getAsset({
-  id: "asset_id_here",
-});
-
-// Get assets by owner
-const assets = await helius.getAssetsByOwner({
-  ownerAddress: "wallet_address",
-  page: 1,
-  limit: 100,
-  displayOptions: {
-    showFungible: true,
-    showNativeBalance: true,
+Success response:
+```json
+{
+  "status": "SUCCESS",
+  "apiKey": "your-api-key-here",
+  "endpoints": {
+    "mainnet": "https://mainnet.helius-rpc.com/?api-key=your-api-key",
+    "devnet": "https://devnet.helius-rpc.com/?api-key=your-api-key"
   },
-});
-
-// Get assets by collection
-const collection = await helius.getAssetsByGroup({
-  groupKey: "collection",
-  groupValue: "collection_address",
-  page: 1,
-  limit: 100,
-});
-
-// Search assets with filters
-const results = await helius.searchAssets({
-  ownerAddress: "wallet_address",
-  tokenType: "fungible",
-  burnt: false,
-  page: 1,
-  limit: 50,
-});
-
-// Get batch of assets
-const batch = await helius.getAssetBatch({
-  ids: ["asset1", "asset2", "asset3"],
-});
-
-// Get asset proof (for compressed NFTs)
-const proof = await helius.getAssetProof({
-  id: "compressed_nft_id",
-});
-```
-
-### DAS Method Reference
-
-| Method | Description |
-|--------|-------------|
-| `getAsset` | Get single asset by ID |
-| `getAssetBatch` | Get multiple assets |
-| `getAssetProof` | Get merkle proof for cNFT |
-| `getAssetProofBatch` | Get multiple proofs |
-| `getAssetsByOwner` | All assets for wallet |
-| `getAssetsByCreator` | Assets by creator address |
-| `getAssetsByAuthority` | Assets by authority |
-| `getAssetsByGroup` | Assets by collection/group |
-| `searchAssets` | Advanced search with filters |
-| `getNftEditions` | Get NFT edition info |
-| `getTokenAccounts` | Get token accounts |
-| `getSignaturesForAsset` | Transaction history for asset |
-
-## Enhanced Transactions API
-
-Get parsed, human-readable transaction data.
-
-```typescript
-// Parse transactions by signature
-const parsed = await helius.enhanced.getTransactions({
-  transactions: ["sig1", "sig2", "sig3"],
-});
-
-// Get enhanced transaction history
-const history = await helius.enhanced.getTransactionsByAddress({
-  address: "wallet_address",
-  type: "SWAP", // Optional: filter by type
-});
-```
-
-### Transaction Types
-
-- `SWAP` - DEX swaps (Jupiter, Raydium, Orca)
-- `NFT_SALE` - NFT marketplace sales
-- `NFT_LISTING` - NFT listings
-- `NFT_BID` - NFT bids
-- `TOKEN_MINT` - Token minting
-- `TRANSFER` - SOL/token transfers
-- `STAKE` - Staking operations
-- `UNKNOWN` - Unrecognized transactions
-
-## Priority Fee API
-
-Get real-time priority fee recommendations.
-
-```typescript
-// Get priority fee estimate
-const feeEstimate = await helius.getPriorityFeeEstimate({
-  transaction: serializedTransaction, // Base64 encoded
-  // OR
-  accountKeys: ["account1", "account2"], // Accounts in transaction
-  options: {
-    priorityLevel: "HIGH", // LOW, MEDIUM, HIGH, VERY_HIGH
-    includeAllPriorityFeeLevels: true,
-    lookbackSlots: 150,
-  },
-});
-
-console.log(feeEstimate.priorityFeeEstimate); // microLamports
-```
-
-### Using Priority Fees in Transactions
-
-```typescript
-import { getSetComputeUnitPriceInstruction } from "@solana-program/compute-budget";
-
-// Get estimate
-const { priorityFeeEstimate } = await helius.getPriorityFeeEstimate({
-  accountKeys: [payer.address, recipient.address],
-  options: { priorityLevel: "HIGH" },
-});
-
-// Add to transaction
-const priorityFeeIx = getSetComputeUnitPriceInstruction({
-  microLamports: BigInt(priorityFeeEstimate),
-});
-
-// Prepend to transaction instructions
-const tx = pipe(
-  createTransactionMessage({ version: 0 }),
-  (tx) => setTransactionMessageFeePayer(payer.address, tx),
-  (tx) => setTransactionMessageLifetimeUsingBlockhash(blockhash, tx),
-  (tx) => prependTransactionMessageInstructions([priorityFeeIx], tx),
-  (tx) => appendTransactionMessageInstruction(mainInstruction, tx),
-);
-```
-
-## Webhooks
-
-Real-time blockchain event notifications.
-
-### Webhook Types
-
-| Type | Description |
-|------|-------------|
-| **Enhanced** | Parsed, filtered events (NFT sales, swaps, etc.) |
-| **Raw** | Unfiltered transaction data, lower latency |
-| **Discord** | Direct Discord channel notifications |
-
-### Create Webhook
-
-```typescript
-// Create enhanced webhook
-const webhook = await helius.webhooks.createWebhook({
-  webhookURL: "https://your-server.com/webhook",
-  transactionTypes: ["NFT_SALE", "SWAP"],
-  accountAddresses: ["address1", "address2"],
-  webhookType: "enhanced",
-});
-
-// Create raw webhook
-const rawWebhook = await helius.webhooks.createWebhook({
-  webhookURL: "https://your-server.com/raw-webhook",
-  accountAddresses: ["address1"],
-  webhookType: "raw",
-});
-```
-
-### Manage Webhooks
-
-```typescript
-// Get all webhooks
-const webhooks = await helius.webhooks.getAllWebhooks();
-
-// Get specific webhook
-const webhook = await helius.webhooks.getWebhookByID({
-  webhookID: "webhook_id",
-});
-
-// Update webhook
-await helius.webhooks.updateWebhook({
-  webhookID: "webhook_id",
-  webhookURL: "https://new-url.com/webhook",
-  accountAddresses: ["address1", "address2", "address3"],
-});
-
-// Delete webhook
-await helius.webhooks.deleteWebhook({
-  webhookID: "webhook_id",
-});
-```
-
-### Webhook Payload (Enhanced)
-
-```typescript
-interface EnhancedWebhookPayload {
-  accountData: AccountData[];
-  description: string;
-  events: Record<string, unknown>;
-  fee: number;
-  feePayer: string;
-  nativeTransfers: NativeTransfer[];
-  signature: string;
-  slot: number;
-  source: string;
-  timestamp: number;
-  tokenTransfers: TokenTransfer[];
-  type: string;
+  "credits": 1000000
 }
 ```
 
-## ZK Compression API
-
-Work with compressed accounts and tokens (Light Protocol).
-
-```typescript
-// Get compressed account
-const account = await helius.zk.getCompressedAccount({
-  address: "compressed_account_address",
-});
-
-// Get compressed token accounts by owner
-const tokens = await helius.zk.getCompressedTokenAccountsByOwner({
-  owner: "wallet_address",
-});
-
-// Get compressed balance
-const balance = await helius.zk.getCompressedBalance({
-  address: "compressed_account_address",
-});
-
-// Get validity proof
-const proof = await helius.zk.getValidityProof({
-  hashes: ["hash1", "hash2"],
-});
-
-// Get compression signatures
-const sigs = await helius.zk.getCompressionSignaturesForOwner({
-  owner: "wallet_address",
-  limit: 100,
-});
-```
-
-### ZK Compression Methods
-
-| Method | Description |
-|--------|-------------|
-| `getCompressedAccount` | Get compressed account data |
-| `getCompressedAccountProof` | Get proof for account |
-| `getCompressedAccountsByOwner` | All compressed accounts for wallet |
-| `getCompressedBalance` | Get compressed SOL balance |
-| `getCompressedTokenAccountsByOwner` | Compressed token accounts |
-| `getCompressedTokenBalancesByOwner` | Token balances |
-| `getValidityProof` | Get validity proof for hashes |
-| `getCompressionSignaturesForOwner` | Compression transaction history |
-| `getIndexerHealth` | Check indexer status |
-| `getIndexerSlot` | Current indexed slot |
-
-## Transaction Sending
-
-### Smart Transaction Sending
-
-```typescript
-// Send with automatic retry and optimization
-const signature = await helius.tx.sendSmartTransaction({
-  transaction: signedTransaction,
-  skipPreflight: false,
-  maxRetries: 3,
-});
-
-// Estimate compute units
-const computeUnits = await helius.tx.getComputeUnits({
-  transaction: serializedTransaction,
-});
-```
-
-### Optimized Transaction Pattern
-
-```typescript
-import { createHelius } from "helius-sdk";
-import {
-  pipe,
-  createTransactionMessage,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  appendTransactionMessageInstruction,
-  signTransactionMessageWithSigners,
-  getBase64EncodedWireTransaction,
-} from "@solana/kit";
-import {
-  getSetComputeUnitLimitInstruction,
-  getSetComputeUnitPriceInstruction,
-} from "@solana-program/compute-budget";
-
-async function sendOptimizedTransaction(
-  helius: ReturnType<typeof createHelius>,
-  rpc: Rpc,
-  signer: KeyPairSigner,
-  instruction: IInstruction
-) {
-  // 1. Get priority fee
-  const { priorityFeeEstimate } = await helius.getPriorityFeeEstimate({
-    accountKeys: [signer.address],
-    options: { priorityLevel: "HIGH" },
-  });
-
-  // 2. Get blockhash
-  const { value: blockhash } = await rpc.getLatestBlockhash().send();
-
-  // 3. Build transaction with compute budget
-  const tx = pipe(
-    createTransactionMessage({ version: 0 }),
-    (tx) => setTransactionMessageFeePayer(signer.address, tx),
-    (tx) => setTransactionMessageLifetimeUsingBlockhash(blockhash, tx),
-    (tx) => prependTransactionMessageInstructions([
-      getSetComputeUnitLimitInstruction({ units: 200_000 }),
-      getSetComputeUnitPriceInstruction({ microLamports: BigInt(priorityFeeEstimate) }),
-    ], tx),
-    (tx) => appendTransactionMessageInstruction(instruction, tx),
-  );
-
-  // 4. Sign
-  const signedTx = await signTransactionMessageWithSigners(tx);
-
-  // 5. Send via Helius
-  const signature = await helius.tx.sendSmartTransaction({
-    transaction: getBase64EncodedWireTransaction(signedTx),
-  });
-
-  return signature;
-}
-```
-
-## WebSocket Subscriptions
-
-Real-time data streaming via WebSocket.
-
-```typescript
-// Subscribe to account changes
-const accountSub = await helius.ws.accountNotifications({
-  account: "account_address",
-  commitment: "confirmed",
-  callback: (notification) => {
-    console.log("Account changed:", notification);
-  },
-});
-
-// Subscribe to logs
-const logsSub = await helius.ws.logsNotifications({
-  filter: { mentions: ["program_id"] },
-  commitment: "confirmed",
-  callback: (logs) => {
-    console.log("Logs:", logs);
-  },
-});
-
-// Subscribe to signature confirmations
-const sigSub = await helius.ws.signatureNotifications({
-  signature: "transaction_signature",
-  commitment: "confirmed",
-  callback: (status) => {
-    console.log("Confirmed:", status);
-  },
-});
-
-// Unsubscribe
-await accountSub.unsubscribe();
-```
-
-## LaserStream (gRPC)
-
-LaserStream is a next-generation gRPC streaming service - a drop-in replacement for Yellowstone that adds historical replay, auto-reconnect, and multi-region endpoints.
-
-### Features
-- **Ultra-low latency**: Taps directly into Solana leaders to receive shreds as they're produced
-- **Historical replay**: Replay past blocks and transactions
-- **Auto-reconnect**: Automatic failover and recovery
-- **Redundant node clusters**: High availability infrastructure
-- **Regional endpoints**: Global coverage for minimal latency
-- Block, transaction, and account streaming
-
 ### Endpoints
 
-| Region | Endpoint |
-|--------|----------|
-| Frankfurt | `fra.laserstream.helius.dev` |
-| Amsterdam | `ams.laserstream.helius.dev` |
-| Tokyo | `tyo.laserstream.helius.dev` |
-| Singapore | `sg.laserstream.helius.dev` |
-| Los Angeles | `lax.laserstream.helius.dev` |
-| London | `lon.laserstream.helius.dev` |
-| Newark | `ewr.laserstream.helius.dev` |
-| Pittsburgh | `pitt.laserstream.helius.dev` |
-| Salt Lake City | `slc.laserstream.helius.dev` |
+- **Mainnet RPC**: `https://mainnet.helius-rpc.com/?api-key=YOUR_API_KEY`
+- **Mainnet RPC (Beta)**: `https://beta.helius-rpc.com/?api-key=YOUR_API_KEY`
+- **Devnet RPC**: `https://devnet.helius-rpc.com/?api-key=YOUR_API_KEY`
+- **Mainnet WSS**: `wss://mainnet.helius-rpc.com/?api-key=YOUR_API_KEY`
+- **Devnet WSS**: `wss://devnet.helius-rpc.com/?api-key=YOUR_API_KEY`
 
-### Atlas Infrastructure
+## Core APIs
 
-Atlas endpoints provide the backbone for Enhanced WebSockets and high-performance streaming:
+### 1. Solana RPC (Standard)
+
+Standard Solana JSON-RPC methods with enhanced performance.
 
 ```typescript
-// Atlas WebSocket endpoints
-const ATLAS_MAINNET_WS = "wss://atlas-mainnet.helius-rpc.com";
-const ATLAS_DEVNET_WS = "wss://atlas-devnet.helius-rpc.com";
-```
+import { Connection } from '@solana/web3.js';
 
-### Enhanced WebSockets (New)
-
-Enhanced WebSockets are now powered by LaserStream infrastructure, offering:
-- **1.5–2× faster** than standard WebSockets
-- gRPC reliability in a WebSocket wrapper
-- Same filtering and event types as regular WebSockets
-
-```typescript
-// Connect to Enhanced WebSocket
-const ws = new WebSocket(
-  `wss://atlas-mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
+const connection = new Connection(
+  'https://mainnet.helius-rpc.com/?api-key=YOUR_API_KEY'
 );
 
-ws.on("open", () => {
-  // Subscribe to account changes
-  ws.send(JSON.stringify({
-    jsonrpc: "2.0",
+// Get account info
+const accountInfo = await connection.getAccountInfo(publicKey);
+
+// Get balance
+const balance = await connection.getBalance(publicKey);
+
+// Send transaction
+const signature = await connection.sendTransaction(transaction, [signer]);
+```
+
+### 2. getTransactionsForAddress (Enhanced)
+
+**Most powerful transaction history API** with filtering, sorting, and pagination.
+
+```typescript
+const response = await fetch(heliusRpcUrl, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    jsonrpc: '2.0',
     id: 1,
-    method: "accountSubscribe",
-    params: [accountAddress, { commitment: "confirmed" }],
+    method: 'getTransactionsForAddress',
+    params: [
+      walletAddress,
+      {
+        transactionDetails: 'full', // or 'signatures'
+        sortOrder: 'desc', // or 'asc'
+        limit: 100,
+        filters: {
+          tokenAccounts: 'balanceChanged', // 'none', 'balanceChanged', 'all'
+          status: 'succeeded', // 'succeeded', 'failed', 'any'
+          blockTime: {
+            gte: 1640995200,
+            lte: 1641081600
+          }
+        }
+      }
+    ]
+  })
+});
+```
+
+**Key Features:**
+- **Complete token history** - includes associated token accounts (ATAs)
+- **Time-based filtering** - filter by blockTime, slot, or signature
+- **Status filtering** - succeeded, failed, or any
+- **Bidirectional sorting** - asc (chronological) or desc (newest first)
+- **Efficient pagination** - keyset pagination with tokens
+
+**Token Account Filters:**
+- `none` - Only direct wallet transactions
+- `balanceChanged` - Wallet + token balance changes (recommended)
+- `all` - Wallet + all token account activity
+
+**Use Cases:**
+- Portfolio tracking
+- Transaction history
+- Token launch analysis
+- Wallet funding history
+- Audit & compliance
+
+### 3. DAS API (Digital Asset Standard)
+
+Unified interface for NFTs, compressed NFTs, and fungible tokens.
+
+```typescript
+// Get all assets owned by wallet
+const response = await fetch(heliusRpcUrl, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'getAssetsByOwner',
+    params: {
+      ownerAddress: walletAddress,
+      page: 1,
+      limit: 1000,
+      displayOptions: {
+        showFungible: true,
+        showNativeBalance: true
+      }
+    }
+  })
+});
+
+// Search assets
+const searchResponse = await fetch(heliusRpcUrl, {
+  method: 'POST',
+  body: JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'searchAssets',
+    params: {
+      grouping: ['collection', collectionAddress],
+      page: 1,
+      limit: 1000
+    }
+  })
+});
+
+// Get asset by ID
+const assetResponse = await fetch(heliusRpcUrl, {
+  method: 'POST',
+  body: JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'getAsset',
+    params: { id: assetId }
+  })
+});
+```
+
+**Methods:**
+- `getAsset` - Get single asset details
+- `getAssetsByOwner` - Get all assets for wallet
+- `getAssetsByGroup` - Get assets by collection
+- `searchAssets` - Advanced search with filters
+- `getSignaturesForAsset` - Transaction history for cNFTs
+
+### 4. Enhanced Transactions API
+
+Parsed, human-readable transaction data with automatic labeling.
+
+```typescript
+const response = await fetch(
+  `https://api.helius.xyz/v0/transactions/?api-key=${apiKey}`,
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      transactions: [signature1, signature2]
+    })
+  }
+);
+
+// Response includes:
+// - type: SWAP, NFT_SALE, TOKEN_MINT, etc.
+// - source: MAGIC_EDEN, JUPITER, RAYDIUM, etc.
+// - tokenTransfers: parsed token movements
+// - nativeTransfers: SOL transfers
+// - accountData: involved accounts
+```
+
+**Transaction Types:**
+- SWAP, NFT_SALE, NFT_MINT, TOKEN_MINT
+- TRANSFER, BURN, STAKE, UNSTAKE
+- CREATE_ACCOUNT, CLOSE_ACCOUNT
+- And 50+ more types
+
+### 5. Priority Fee API
+
+Optimal priority fee estimation for transaction landing.
+
+```typescript
+const response = await fetch(
+  `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'getPriorityFeeEstimate',
+      params: [{
+        accountKeys: [accountPubkey1, accountPubkey2],
+        options: {
+          recommended: true
+        }
+      }]
+    })
+  }
+);
+
+// Response:
+// {
+//   priorityFeeEstimate: 10000, // microlamports
+//   priorityFeeLevels: {
+//     min: 0,
+//     low: 5000,
+//     medium: 10000,
+//     high: 50000,
+//     veryHigh: 100000
+//   }
+// }
+```
+
+### 6. Webhooks
+
+Real-time HTTP POST notifications for blockchain events.
+
+```typescript
+// Create webhook
+const webhook = await fetch(
+  `https://api.helius.xyz/v0/webhooks?api-key=${apiKey}`,
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      webhookURL: 'https://your-server.com/webhook',
+      transactionTypes: ['NFT_SALE', 'SWAP'],
+      accountAddresses: [walletAddress],
+      webhookType: 'enhanced'
+    })
+  }
+);
+
+// Webhook payload includes:
+// - signature
+// - type (NFT_SALE, SWAP, etc.)
+// - source (MAGIC_EDEN, JUPITER, etc.)
+// - tokenTransfers
+// - nativeTransfers
+// - timestamp
+```
+
+**Webhook Types:**
+- `enhanced` - Parsed transaction data
+- `raw` - Raw transaction data
+- `discord` - Discord-formatted messages
+
+### 7. WebSockets (Enhanced)
+
+Powered by LaserStream with advanced filtering and automatic parsing.
+
+```typescript
+const ws = new WebSocket(
+  `wss://mainnet.helius-rpc.com/?api-key=${apiKey}`
+);
+
+ws.on('open', () => {
+  // Subscribe to account updates
+  ws.send(JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'accountSubscribe',
+    params: [
+      accountPubkey,
+      {
+        encoding: 'jsonParsed',
+        commitment: 'confirmed'
+      }
+    ]
+  }));
+
+  // Subscribe to transaction updates
+  ws.send(JSON.stringify({
+    jsonrpc: '2.0',
+    id: 2,
+    method: 'transactionSubscribe',
+    params: [{
+      accountInclude: [accountPubkey],
+      accountRequired: [accountPubkey]
+    }]
   }));
 });
-```
 
-### Shred Delivery (Beta)
-
-For teams chasing single-digit millisecond latency, Helius offers a UDP feed of raw shreds directly from validators.
-
-## Staking API
-
-Stake SOL with Helius validator programmatically.
-
-```typescript
-// Create stake transaction
-const stakeTx = await helius.staking.createStakeTransaction({
-  payerAddress: "wallet_address",
-  amount: 1_000_000_000, // 1 SOL in lamports
-});
-
-// Create unstake transaction
-const unstakeTx = await helius.staking.createUnstakeTransaction({
-  payerAddress: "wallet_address",
-  stakeAccountAddress: "stake_account",
-});
-
-// Get stake accounts
-const stakeAccounts = await helius.staking.getHeliusStakeAccounts({
-  ownerAddress: "wallet_address",
+ws.on('message', (data) => {
+  const message = JSON.parse(data);
+  console.log('Update:', message);
 });
 ```
 
-## SDK Namespaces
+### 8. LaserStream gRPC
 
-| Namespace | Purpose |
-|-----------|---------|
-| `helius.*` | DAS API, priority fees |
-| `helius.rpc.*` | Enhanced RPC methods |
-| `helius.tx.*` | Transaction operations |
-| `helius.staking.*` | Validator staking |
-| `helius.enhanced.*` | Decoded transaction data |
-| `helius.webhooks.*` | Event management |
-| `helius.ws.*` | WebSocket subscriptions |
-| `helius.zk.*` | ZK Compression features |
-
-## Error Handling
+Lowest latency data streaming via gRPC with 24-hour replay.
 
 ```typescript
-try {
-  const assets = await helius.getAssetsByOwner({ ownerAddress: "..." });
-} catch (error) {
-  if (error.response?.status === 401) {
-    console.error("Invalid API key");
-  } else if (error.response?.status === 429) {
-    console.error("Rate limited - upgrade plan or reduce requests");
-  } else if (error.response?.status >= 500) {
-    console.error("Helius server error - retry later");
+import { LaserStream } from '@helius-labs/laserstream';
+
+const stream = new LaserStream({
+  apiKey: process.env.HELIUS_API_KEY,
+  network: 'mainnet'
+});
+
+// Subscribe to account updates
+await stream.subscribeAccounts({
+  accounts: [accountPubkey],
+  onUpdate: (update) => {
+    console.log('Account update:', update);
   }
-}
+});
+
+// Subscribe to transactions
+await stream.subscribeTransactions({
+  accounts: [accountPubkey],
+  onTransaction: (tx) => {
+    console.log('Transaction:', tx);
+  }
+});
+
+// Historical replay (last 24 hours)
+await stream.replay({
+  startTime: Date.now() - 3600000, // 1 hour ago
+  accounts: [accountPubkey],
+  onUpdate: (update) => {
+    console.log('Historical update:', update);
+  }
+});
 ```
 
-### Common Error Codes
+### 9. Helius Sender
 
-| Code | Meaning | Solution |
-|------|---------|----------|
-| 401 | Invalid API key | Check key in dashboard |
-| 429 | Rate limited | Upgrade plan or add delays |
-| 500+ | Server error | Retry with backoff |
+Ultra-low latency transaction submission via staked connections + Jito.
 
-## Rate Limits & Pricing
+```typescript
+// Automatically routes through:
+// 1. Staked connections (Solana's largest validator)
+// 2. Jito bundles (MEV protection)
 
-| Plan | Credits/Month | RPC Calls | Webhooks |
-|------|--------------|-----------|----------|
-| Free | 500,000 | Standard | 2 |
-| Developer | 5M | Enhanced | 10 |
-| Growth | 50M | Priority | 50 |
-| Enterprise | Custom | Dedicated | Unlimited |
+const signature = await connection.sendTransaction(
+  transaction,
+  [signer],
+  {
+    skipPreflight: false,
+    preflightCommitment: 'confirmed'
+  }
+);
 
-### Credit Costs
+// 7 global endpoints for lowest latency
+// 0 credits used
+// Higher landing rates than standard sendTransaction
+```
 
-- Standard RPC: 1 credit/call
-- DAS API: 1-10 credits/call
-- Webhooks: 1 credit/event delivered
-- Webhook management: 100 credits/operation
+### 10. ZK Compression API
+
+Compressed account and token operations (98% cost reduction).
+
+```typescript
+// Create compressed account
+const response = await fetch(
+  `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
+  {
+    method: 'POST',
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'getCompressedAccount',
+      params: { hash: accountHash }
+    })
+  }
+);
+
+// Compressed token operations
+// - 5000x cheaper than standard token accounts
+// - 160x cheaper than standard PDA accounts
+// - No sacrifice in L1 performance or security
+```
+
+### 11. Wallet API
+
+Query wallet data with structured REST endpoints.
+
+```typescript
+// Get wallet balances
+const balances = await fetch(
+  `https://api.helius.xyz/v0/addresses/${walletAddress}/balances?api-key=${apiKey}`
+);
+
+// Get transaction history
+const history = await fetch(
+  `https://api.helius.xyz/v0/addresses/${walletAddress}/transactions?api-key=${apiKey}`
+);
+
+// Get token transfers
+const transfers = await fetch(
+  `https://api.helius.xyz/v0/addresses/${walletAddress}/transfers?api-key=${apiKey}`
+);
+```
+
+## Common Use Cases
+
+### Trading Bot
+```typescript
+// Use:
+// - Helius Sender (fast tx submission)
+// - Priority Fee API (optimal fees)
+// - LaserStream (real-time prices)
+
+const priorityFee = await getPriorityFeeEstimate(accounts);
+transaction.add(
+  ComputeBudgetProgram.setComputeUnitPrice({
+    microLamports: priorityFee
+  })
+);
+
+const signature = await connection.sendTransaction(transaction, [signer]);
+```
+
+### Wallet App
+```typescript
+// Use:
+// - DAS API (getAssetsByOwner)
+// - getTransactionsForAddress (complete history)
+// - Wallet API (REST endpoints)
+
+const assets = await getAssetsByOwner(walletAddress);
+const history = await getTransactionsForAddress(walletAddress, {
+  filters: { tokenAccounts: 'balanceChanged' }
+});
+```
+
+### NFT Marketplace
+```typescript
+// Use:
+// - DAS API (searchAssets, getAssetsByGroup)
+// - Webhooks (track sales/listings)
+
+const collection = await searchAssets({
+  grouping: ['collection', collectionAddress]
+});
+
+// Setup webhook for sales
+await createWebhook({
+  transactionTypes: ['NFT_SALE'],
+  accountAddresses: [collectionAddress]
+});
+```
+
+### Token Launcher
+```typescript
+// Use:
+// - Helius Sender (reliable tx landing)
+// - Priority Fee API (optimal fees)
+// - Webhooks (monitor new token)
+
+const signature = await createToken(mint, [signer]);
+await createWebhook({
+  transactionTypes: ['TOKEN_MINT', 'SWAP'],
+  accountAddresses: [mintAddress]
+});
+```
+
+### Analytics Dashboard
+```typescript
+// Use:
+// - Enhanced Transactions API (parsed data)
+// - getTransactionsForAddress (historical data)
+
+const transactions = await getTransactionsForAddress(address, {
+  transactionDetails: 'full',
+  filters: {
+    blockTime: { gte: startTime, lte: endTime },
+    status: 'succeeded'
+  }
+});
+
+const parsed = await getEnhancedTransactions(
+  transactions.map(tx => tx.signature)
+);
+```
+
+## Key Concepts
+
+| Term | Definition |
+|------|------------|
+| **DAS** | Digital Asset Standard - unified API for NFTs, tokens, and compressed assets |
+| **cNFT** | Compressed NFT - 1000x cheaper to mint using merkle trees |
+| **ZK Compression** | 98% storage cost reduction using zero-knowledge proofs |
+| **Helius Sender** | Transaction submission via staked connections + Jito |
+| **LaserStream** | Managed gRPC streaming with historical replay |
+| **Priority Fee** | Additional fee (microlamports) to prioritize transactions |
+| **Staked Connections** | Direct validator connections via stake-weighted routing |
+| **ATA** | Associated Token Account - standard token account address |
+
+## Don't Confuse These
+
+| Want to... | Use | NOT | Why |
+|------------|-----|-----|-----|
+| Get wallet NFTs/tokens | `getAssetsByOwner` (DAS) | `getTokenAccountsByOwner` | DAS returns metadata, not raw accounts |
+| Get complete tx history | `getTransactionsForAddress` | `getSignaturesForAddress` | Includes token accounts automatically |
+| Get cNFT history | `getSignaturesForAsset` (DAS) | `getSignaturesForAddress` | Standard method doesn't work for cNFTs |
+| Stream real-time data | LaserStream gRPC | Yellowstone gRPC | LaserStream has 24h replay + auto-reconnect |
+| Send transactions | Helius Sender | Standard `sendTransaction` | Dual routes (staked + Jito) = higher landing |
+| Get priority fees | `getPriorityFeeEstimate` | `getRecentPrioritizationFees` | No manual calculation needed |
+| Search NFTs | DAS `searchAssets` | `getProgramAccounts` | DAS is faster, cheaper, indexed |
 
 ## Best Practices
 
-### API Key Security
-- Never commit API keys to git
-- Use environment variables
-- Rotate keys periodically
-- Use separate keys for dev/prod
-
 ### Performance
-- Batch requests when possible (getAssetBatch, getAssetProofBatch)
-- Use cursor-based pagination for large datasets
-- Cache frequently accessed data
-- Use appropriate commitment levels
+1. Use `transactionDetails: 'signatures'` when full data not needed
+2. Implement reasonable page sizes (100-1000)
+3. Filter by time ranges for targeted queries
+4. Cache results when appropriate
 
-### Reliability
-- Implement retry logic with exponential backoff
-- Handle rate limits gracefully
-- Use multiple regional endpoints for failover
-- Monitor webhook delivery and handle retries
+### Filtering
+1. Start broad, narrow progressively
+2. Use time-based filters for analytics
+3. Combine multiple filters for precision
+4. Store pagination tokens for resuming
+
+### Error Handling
+1. Handle rate limits with exponential backoff
+2. Validate addresses before requests
+3. Monitor pagination depth
+4. Use commitment levels appropriately
+
+## SDKs
+
+### Node.js SDK
+```bash
+npm install @helius-labs/helius-sdk
+```
+
+```typescript
+import { Helius } from '@helius-labs/helius-sdk';
+
+const helius = new Helius(process.env.HELIUS_API_KEY);
+
+// Get assets
+const assets = await helius.rpc.getAssetsByOwner({
+  ownerAddress: walletAddress
+});
+
+// Get transactions
+const txs = await helius.rpc.getTransactionsForAddress(
+  walletAddress,
+  { limit: 100 }
+);
+
+// Create webhook
+const webhook = await helius.createWebhook({
+  webhookURL: 'https://your-server.com/webhook',
+  transactionTypes: ['NFT_SALE']
+});
+```
+
+### Rust SDK
+```bash
+cargo add helius
+```
+
+```rust
+use helius::Helius;
+
+let helius = Helius::new(api_key).unwrap();
+
+// Get assets
+let assets = helius
+    .rpc()
+    .get_assets_by_owner(owner_address)
+    .await?;
+
+// Get transactions
+let txs = helius
+    .rpc()
+    .get_transactions_for_address(address, None)
+    .await?;
+```
+
+## Staking with Helius
+
+### Native Staking
+```typescript
+import { Helius } from '@helius-labs/helius-sdk';
+
+const helius = new Helius(apiKey);
+
+// Create stake transaction
+const { serializedTx, stakeAccountPubkey } = 
+  await helius.rpc.createStakeTransaction(
+    payer.publicKey,
+    1.5 // SOL amount
+  );
+
+// Sign and send
+const tx = Transaction.from(bs58.decode(serializedTx));
+tx.partialSign(payer);
+const signature = await helius.connection.sendRawTransaction(
+  tx.serialize()
+);
+
+console.log(`Staked! Account: ${stakeAccountPubkey}`);
+```
+
+### Liquid Staking (hSOL)
+- **0% commission**
+- **100% MEV rewards**
+- **Highest APYs**
+- Trade on DEXs while earning yield
+
+## Pricing & Billing
+
+### Plans
+- **Free**: 100K credits/month
+- **Developer**: 1M credits/month
+- **Business**: 10M credits/month
+- **Professional**: 100M credits/month
+- **Enterprise**: Custom
+
+### Autoscaling
+- Automatically purchase additional credits
+- $5 per million credits
+- Set limits to control costs
+- Email alerts for usage
+
+### Pay with Crypto
+- Pay in USDC on Solana
+- Monthly or annual billing
+- Cancel anytime
 
 ## Resources
 
-- [Helius Documentation](https://www.helius.dev/docs)
-- [Helius Dashboard](https://dashboard.helius.dev)
-- [Helius SDK GitHub](https://github.com/helius-labs/helius-sdk)
-- [Helius Discord](https://discord.gg/helius)
-- [Helius Status](https://status.helius.dev)
+- **Dashboard**: https://dashboard.helius.dev
+- **Documentation**: https://docs.helius.dev
+- **Status**: https://helius.statuspage.io
+- **Discord**: https://discord.com/invite/6GXdee3gBj
+- **Support**: https://dashboard.helius.dev/support
+- **Orb Explorer**: https://orbmarkets.io
 
-## Skill Structure
+## When to Use This Skill
 
-```
-helius/
-├── SKILL.md                    # This file
-├── resources/
-│   ├── rpc-methods.md          # Complete RPC reference
-│   ├── das-api.md              # DAS API reference
-│   ├── enhanced-apis.md        # Enhanced transactions & priority fees
-│   ├── webhooks.md             # Webhook configuration
-│   ├── zk-compression.md       # ZK compression API
-│   └── sdk-reference.md        # SDK namespace reference
-├── examples/
-│   ├── basic-rpc/              # Basic RPC calls
-│   ├── fetch-nfts/             # DAS API examples
-│   ├── send-transactions/      # Transaction sending
-│   ├── webhooks/               # Webhook setup
-│   └── streaming/              # Real-time data
-├── templates/
-│   └── helius-setup.ts         # Starter template
-└── docs/
-    └── troubleshooting.md      # Common issues
-```
+Use this skill when:
+- Building Solana applications
+- Querying wallet balances and NFTs
+- Getting transaction history
+- Streaming real-time blockchain data
+- Sending transactions reliably
+- Estimating priority fees
+- Setting up webhooks for events
+- Working with compressed NFTs
+- Analyzing on-chain data
+- Building trading bots
+- Creating wallet applications
+- Developing NFT marketplaces
+
+## Integration Checklist
+
+- [ ] Get Helius API key (programmatically or dashboard)
+- [ ] Choose appropriate APIs for use case
+- [ ] Install SDK (Node.js or Rust)
+- [ ] Configure endpoints (mainnet/devnet)
+- [ ] Implement error handling
+- [ ] Set up webhooks if needed
+- [ ] Configure autoscaling limits
+- [ ] Test on devnet first
+- [ ] Monitor usage in dashboard
+- [ ] Deploy to production
+
+This skill provides complete Helius platform documentation for building production-ready Solana applications with the best infrastructure available.

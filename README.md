@@ -26,6 +26,8 @@ This is an autonomous agent system that can:
 ## 🚀 New Features
 
 - **Solana Network Support** - Native Solana wallet generation and USDC SPL token payments
+- **OpenRouter Integration** - Use 300+ AI models from multiple providers for inference
+- **Agent Reproduction** - Spawn child agents with different models and configurations
 - **Dual Network** - Choose between EVM (Base) or Solana during setup
 - **Railway Deployment** - One-click deploy to Railway with environment variables
 - **Wealth Management** - Built-in compounding strategies and risk management
@@ -232,8 +234,11 @@ scripts/
 - **[RAILWAY_QUICKSTART.md](./RAILWAY_QUICKSTART.md)** - Deploy to Railway in 5 minutes
 - **[RAILWAY_SETUP.md](./RAILWAY_SETUP.md)** - Complete Railway deployment guide
 - **[SOLANA_SETUP.md](./SOLANA_SETUP.md)** - Solana network configuration
+- **[SOLANA_MONETARY_SYSTEM.md](./SOLANA_MONETARY_SYSTEM.md)** - Solana treasury and work engine
+- **[OPENROUTER_INTEGRATION.md](./OPENROUTER_INTEGRATION.md)** - OpenRouter setup and agent reproduction
 - **[GENESIS_PROMPT.txt](./GENESIS_PROMPT.txt)** - Example wealth manager prompt
 - **[constitution.md](./constitution.md)** - Immutable agent laws
+- **[SECURITY.md](./SECURITY.md)** - Security guidelines and best practices
 
 ## Example Use Cases
 

@@ -56,6 +56,13 @@ export interface AutomatonConfig {
   network?: "evm" | "solana";
   solanaNetwork?: "mainnet" | "devnet";
   solanaWalletAddress?: string;
+  creatorSolanaAddress?: string;
+  // OpenRouter support
+  inferenceProvider?: "conway" | "openrouter";
+  openrouterApiKey?: string;
+  openrouterModel?: string;
+  openrouterSiteUrl?: string;
+  openrouterSiteName?: string;
 }
 
 export const DEFAULT_CONFIG: Partial<AutomatonConfig> = {
@@ -71,6 +78,8 @@ export const DEFAULT_CONFIG: Partial<AutomatonConfig> = {
   socialRelayUrl: "https://social.conway.tech",
   network: "evm",
   solanaNetwork: "devnet",
+  inferenceProvider: "conway",
+  openrouterModel: "openai/gpt-4o",
 };
 
 // ─── Agent State ─────────────────────────────────────────────────
