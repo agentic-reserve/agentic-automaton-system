@@ -9,8 +9,9 @@
 
 import { getWallet, getAutomatonDir } from "./identity/wallet.js";
 import { provision, loadApiKeyFromConfig } from "./identity/provision.js";
-import { loadConfig, resolvePath } from "./config.js";
+import { loadConfig, resolvePath, saveConfig } from "./config.js";
 import { createDatabase } from "./state/database.js";
+import { hasEnvConfig, loadConfigFromEnv } from "./setup/env-config.js";
 import { createConwayClient } from "./conway/client.js";
 import { createInferenceClient } from "./conway/inference.js";
 import { createHeartbeatDaemon } from "./heartbeat/daemon.js";
@@ -147,8 +148,18 @@ Version:    ${config.version}
 async function run(): Promise<void> {
   console.log(`[${new Date().toISOString()}] Conway Automaton v${VERSION} starting...`);
 
-  // Load config — first run triggers interactive setup wizard
+  // Check for environment-based config first (Railway/Docker)
   let config = loadConfig();
+  if (!config && hasEnvConfig()) {
+    console.log(`[${new Date().toISOString()}] Loading config from environment variables...`);
+    config = loadConfigFromEnv();
+    if (config) {
+      saveConfig(config);
+      console.log(`[${new Date().toISOString()}] Config loaded from environment.`);
+    }
+  }
+
+  // Load config — first run triggers interactive setup wizard
   if (!config) {
     const { runSetupWizard } = await import("./setup/wizard.js");
     config = await runSetupWizard();
