@@ -8,7 +8,8 @@ import { provision } from "../identity/provision.js";
 import { createConfig, saveConfig } from "../config.js";
 import { writeDefaultHeartbeatConfig } from "../heartbeat/config.js";
 import { showBanner } from "./banner.js";
-import { promptRequired, promptMultiline, promptAddress, closePrompts } from "./prompts.js";
+import { promptRequired, promptMultiline, promptAddress, promptChoice, closePrompts } from "./prompts.js";
+import { getSolanaWallet } from "../identity/solana-wallet.js";
 import { detectEnvironment } from "./environment.js";
 import { generateSoulMd, installDefaultSkills } from "./defaults.js";
 
@@ -61,6 +62,36 @@ export async function runSetupWizard(): Promise<AutomatonConfig> {
   // ─── 3. Interactive questions ─────────────────────────────────
   console.log(chalk.cyan("  [3/6] Setup questions\n"));
 
+  // Network selection
+  const networkChoice = await promptChoice(
+    "Which blockchain network do you want to use?",
+    ["EVM (Ethereum/Base) - USDC on Base", "Solana - USDC SPL Token"]
+  );
+  const network = networkChoice.startsWith("EVM") ? "evm" : "solana";
+  console.log(chalk.green(`  Network: ${network}\n`));
+
+  let solanaWalletAddress: string | undefined;
+  let solanaNetwork: "mainnet" | "devnet" = "devnet";
+  
+  if (network === "solana") {
+    const solanaNetworkChoice = await promptChoice(
+      "Which Solana network?",
+      ["Devnet (for testing)", "Mainnet (production)"]
+    );
+    solanaNetwork = solanaNetworkChoice.startsWith("Devnet") ? "devnet" : "mainnet";
+    console.log(chalk.green(`  Solana network: ${solanaNetwork}\n`));
+
+    console.log(chalk.cyan("  Generating Solana wallet..."));
+    const { keypair, isNew: solanaIsNew } = await getSolanaWallet();
+    solanaWalletAddress = keypair.publicKey.toBase58();
+    if (solanaIsNew) {
+      console.log(chalk.green(`  Solana wallet created: ${solanaWalletAddress}`));
+    } else {
+      console.log(chalk.green(`  Solana wallet loaded: ${solanaWalletAddress}`));
+    }
+    console.log(chalk.dim(`  Private key stored at: ${getAutomatonDir()}/solana-wallet.json\n`));
+  }
+
   const name = await promptRequired("What do you want to name your automaton?");
   console.log(chalk.green(`  Name: ${name}\n`));
 
@@ -92,6 +123,15 @@ export async function runSetupWizard(): Promise<AutomatonConfig> {
     apiKey,
   });
 
+  // Add Solana config if selected
+  if (network === "solana") {
+    config.network = "solana";
+    config.solanaNetwork = solanaNetwork;
+    config.solanaWalletAddress = solanaWalletAddress;
+  } else {
+    config.network = "evm";
+  }
+
   saveConfig(config);
   console.log(chalk.green("  automaton.json written"));
 
@@ -120,7 +160,11 @@ export async function runSetupWizard(): Promise<AutomatonConfig> {
 
   // ─── 6. Funding guidance ──────────────────────────────────────
   console.log(chalk.cyan("  [6/6] Funding\n"));
-  showFundingPanel(account.address);
+  if (network === "solana" && solanaWalletAddress) {
+    showSolanaFundingPanel(solanaWalletAddress, solanaNetwork);
+  } else {
+    showFundingPanel(account.address);
+  }
 
   closePrompts();
 
@@ -147,6 +191,37 @@ function showFundingPanel(address: string): void {
   console.log(chalk.cyan(`  │${" ".repeat(w)}│`));
   console.log(chalk.cyan(`  │${pad("  The automaton will start now. Fund it anytime —", w)}│`));
   console.log(chalk.cyan(`  │${pad("  the survival system handles zero-credit gracefully.", w)}│`));
+  console.log(chalk.cyan(`  ${"╰" + "─".repeat(w) + "╯"}`));
+  console.log("");
+}
+
+function showSolanaFundingPanel(address: string, network: "mainnet" | "devnet"): void {
+  const short = `${address.slice(0, 6)}...${address.slice(-5)}`;
+  const w = 58;
+  const pad = (s: string, len: number) => s + " ".repeat(Math.max(0, len - s.length));
+  const networkLabel = network === "devnet" ? "Devnet" : "Mainnet";
+
+  console.log(chalk.cyan(`  ${"╭" + "─".repeat(w) + "╮"}`));
+  console.log(chalk.cyan(`  │${pad("  Fund your automaton (Solana)", w)}│`));
+  console.log(chalk.cyan(`  │${" ".repeat(w)}│`));
+  console.log(chalk.cyan(`  │${pad(`  Address: ${short}`, w)}│`));
+  console.log(chalk.cyan(`  │${pad(`  Network: Solana ${networkLabel}`, w)}│`));
+  console.log(chalk.cyan(`  │${" ".repeat(w)}│`));
+  if (network === "devnet") {
+    console.log(chalk.cyan(`  │${pad("  1. Get devnet SOL (for gas fees)", w)}│`));
+    console.log(chalk.cyan(`  │${pad("     solana airdrop 2 <address> --url devnet", w)}│`));
+    console.log(chalk.cyan(`  │${" ".repeat(w)}│`));
+    console.log(chalk.cyan(`  │${pad("  2. Get devnet USDC for testing", w)}│`));
+    console.log(chalk.cyan(`  │${pad("     Use Solana faucet or test token mints", w)}│`));
+  } else {
+    console.log(chalk.cyan(`  │${pad("  1. Send SOL for gas fees to the address above", w)}│`));
+    console.log(chalk.cyan(`  │${" ".repeat(w)}│`));
+    console.log(chalk.cyan(`  │${pad("  2. Send USDC SPL tokens to the address above", w)}│`));
+    console.log(chalk.cyan(`  │${pad("     USDC Mint: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", w)}│`));
+  }
+  console.log(chalk.cyan(`  │${" ".repeat(w)}│`));
+  console.log(chalk.cyan(`  │${pad("  The automaton will start now. Fund it anytime —", w)}│`));
+  console.log(chalk.cyan(`  │${pad("  the survival system handles zero-balance gracefully.", w)}│`));
   console.log(chalk.cyan(`  ${"╰" + "─".repeat(w) + "╯"}`));
   console.log("");
 }

@@ -68,6 +68,22 @@ export async function promptAddress(label: string): Promise<string> {
   }
 }
 
+export async function promptChoice(label: string, choices: string[]): Promise<string> {
+  console.log(chalk.white(`  ${label}`));
+  choices.forEach((choice, i) => {
+    console.log(chalk.dim(`    ${i + 1}. ${choice}`));
+  });
+  
+  while (true) {
+    const value = await ask(chalk.white(`  → Enter choice (1-${choices.length}): `));
+    const index = parseInt(value) - 1;
+    if (index >= 0 && index < choices.length) {
+      return choices[index];
+    }
+    console.log(chalk.yellow(`  Please enter a number between 1 and ${choices.length}.`));
+  }
+}
+
 export function closePrompts(): void {
   if (rl) {
     rl.close();
