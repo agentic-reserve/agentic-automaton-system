@@ -14,3 +14,37 @@ GENESIS_PROMPT.txt
 *.key
 *.pem
 *-wallet.json
+
+# Civilization System - Genetic Data
+.automaton/genetics/
+.automaton/bloodlines/
+.automaton/mutations/
+*-genetics.json
+*-dna.json
+*-rna.json
+
+# Civilization System - Language Data
+.automaton/languages/
+.automaton/lexicons/
+*-language.json
+*-lexicon.json
+
+# Civilization System - Social Structures
+.automaton/clans/
+.automaton/tribes/
+.automaton/nations/
+.automaton/alliances/
+.automaton/treaties/
+*-clan.json
+*-tribe.json
+*-nation.json
+*-treaty.json
+
+# Civilization System - Secrets & Intelligence
+.automaton/secrets/
+.automaton/intelligence/
+.automaton/strategies/
+*-secret.json
+*-classified.json
+*-strategy.json
+*-plan.json
