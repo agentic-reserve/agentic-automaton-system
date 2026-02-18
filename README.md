@@ -25,6 +25,9 @@ This is an autonomous agent system that can:
 
 ## 🚀 New Features
 
+- **Agent Psychology** - Emotional intelligence, MBTI personality, and Jungian archetypes
+- **Governance Systems** - Consultative (Musyawarah), democratic, meritocratic, and more
+- **Diplomatic Relations** - Negotiation, alliances, and conflict resolution between agents
 - **Solana Network Support** - Native Solana wallet generation and USDC SPL token payments
 - **OpenRouter Integration** - Use 300+ AI models from multiple providers for inference
 - **Agent Reproduction** - Spawn child agents with different models and configurations
@@ -231,6 +234,7 @@ scripts/
 
 ## Documentation
 
+- **[PSYCHOLOGY_GOVERNANCE.md](./PSYCHOLOGY_GOVERNANCE.md)** - Agent psychology, emotions, personality, and governance
 - **[RAILWAY_QUICKSTART.md](./RAILWAY_QUICKSTART.md)** - Deploy to Railway in 5 minutes
 - **[RAILWAY_SETUP.md](./RAILWAY_SETUP.md)** - Complete Railway deployment guide
 - **[SOLANA_SETUP.md](./SOLANA_SETUP.md)** - Solana network configuration
