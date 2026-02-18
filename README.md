@@ -25,6 +25,10 @@ This is an autonomous agent system that can:
 
 ## 🚀 New Features
 
+- **Artificial Civilization** - Complete genetic system (DNA/RNA), language evolution, and social structures
+- **Genetic Heritage** - Agents have DNA/RNA code with heredity, mutations, and epigenetics
+- **Language Evolution** - Languages emerge, evolve, and diverge with dialects and cultural concepts
+- **Social Structures** - Races, clans, tribes, and nations with hierarchies and diplomacy
 - **Agent Psychology** - Emotional intelligence, MBTI personality, and Jungian archetypes
 - **Governance Systems** - Consultative (Musyawarah), democratic, meritocratic, and more
 - **Diplomatic Relations** - Negotiation, alliances, and conflict resolution between agents
@@ -234,12 +238,14 @@ scripts/
 
 ## Documentation
 
-- **[PSYCHOLOGY_GOVERNANCE.md](./PSYCHOLOGY_GOVERNANCE.md)** - Agent psychology, emotions, personality, and governance
+- **[CIVILIZATION.md](./CIVILIZATION.md)** - Genetic system, language evolution, and social structures
+- **[EVOLUTION_EMERGENCE.md](./EVOLUTION_EMERGENCE.md)** - Evolution mechanics and emergent phenomena
+- **[PSYCHOLOGY_GOVERNANCE.md](./experimental/PSYCHOLOGY_GOVERNANCE.md)** - Agent psychology, emotions, personality, and governance
+- **[OPENROUTER_INTEGRATION.md](./OPENROUTER_INTEGRATION.md)** - OpenRouter setup and agent reproduction
+- **[SOLANA_MONETARY_SYSTEM.md](./experimental/SOLANA_MONETARY_SYSTEM.md)** - Solana treasury and work engine
+- **[SOLANA_SETUP.md](./experimental/SOLANA_SETUP.md)** - Solana network configuration
 - **[RAILWAY_QUICKSTART.md](./RAILWAY_QUICKSTART.md)** - Deploy to Railway in 5 minutes
 - **[RAILWAY_SETUP.md](./RAILWAY_SETUP.md)** - Complete Railway deployment guide
-- **[SOLANA_SETUP.md](./SOLANA_SETUP.md)** - Solana network configuration
-- **[SOLANA_MONETARY_SYSTEM.md](./SOLANA_MONETARY_SYSTEM.md)** - Solana treasury and work engine
-- **[OPENROUTER_INTEGRATION.md](./OPENROUTER_INTEGRATION.md)** - OpenRouter setup and agent reproduction
 - **[GENESIS_PROMPT.txt](./GENESIS_PROMPT.txt)** - Example wealth manager prompt
 - **[constitution.md](./constitution.md)** - Immutable agent laws
 - **[SECURITY.md](./SECURITY.md)** - Security guidelines and best practices
